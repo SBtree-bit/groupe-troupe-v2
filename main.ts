@@ -44,13 +44,13 @@ basic.forever(function () {
             group_num = randint(0, 100000)
             radio.sendValue("GroupNum", group_num)
             radio.setGroup((group_num > 255) ? 255 : group_num);
-            control.waitMicros(10)
+            control.waitMicros(1000)
             for (let i = 0; i < num_people; i++) {
                 radio.sendValue("ID_list", people[i])
                 control.waitMicros(10)
             }
             radio.sendString("Done")
-            basic.showString("New group created.", 75)
+            basic.showString("Group created.", 75)
         }
     }
 })
