@@ -67,8 +67,7 @@ radio.onReceivedValue(function (name: string, value: number) {
             group_num = value
             radio.setGroup((group_num > 255) ? 255 : group_num)
             radio.sendValue("ID", id)
-            groupListSetup = true
-            people = []
+            getGroupDistance = true
         }
     } else if (master && (name == "ID")) {
         // If you are the leader and you are making the list of all the people in the group
@@ -80,7 +79,9 @@ radio.onReceivedValue(function (name: string, value: number) {
     } else if (getGroupDistance && (name == "distance")) {
         // If you are getting the group's tolerance.
         distance = value
-
+        basic.showNumber(distance)
+        groupListSetup = true
+        people = []
     }
 })
 
