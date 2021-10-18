@@ -3,54 +3,106 @@ let joined = false
 let groupListSetup = false
 let group_num = 0
 let master = false
+let getGroupDistance = false
+let distance = 0
+let currentList = [0]
+let prevLists = [[0]]
 let createGroupMessage = false
 let id = randint(0, 10000000000)
 let people = [id]
+let looking = false
 
 radio.setGroup(0)
 radio.sendNumber(0);
 
+function tick()
+{}
+
+function makeGroup()
+{
+    looking = false
+    master = true
+    joined = true
+    group_num = randint(0, 100000)
+    radio.sendValue("GroupNum", group_num)
+    radio.setGroup((group_num > 255) ? 255 : group_num);
+    control.waitMicros(10)
+    basic.showString("Input distance: ", 75)
+    distance = 5
+    while (!input.buttonIsPressed(Button.AB)) {
+        if (input.buttonIsPressed(Button.A)) {
+            distance--
+            basic.showNumber(distance)
+        } else if (input.buttonIsPressed(Button.B)) {
+            distance++
+            basic.showNumber(distance)
+        }
+        control.waitMicros(1000)
+    }
+    radio.sendValue("distance", distance)
+    control.waitMicros(1000)
+    for (let i = 0; i < num_people; i++) {
+        radio.sendValue("ID_list", people[i])
+        control.waitMicros(10)
+    }
+    radio.sendString("Done")
+    basic.showString("Group created.", 75)
+}
+
+function setUp()
+{
+    looking = true
+    basic.showString("Looking for a group...", 75);
+    control.waitMicros(1000);
+    if (!joined) {
+        makeGroup()
+    }
+}
+
 radio.onReceivedValue(function (name: string, value: number) {
-    if (!joined && (name == "GroupNum")) {
+    if (looking && (name == "GroupNum")) {
+        // If you are looking for a group
         if (name == "GroupNum") {
-            joined = true;
-            group_num = value;
+            joined = true
+            group_num = value
             radio.setGroup((group_num > 255) ? 255 : group_num)
             radio.sendValue("ID", id)
             groupListSetup = true
             people = []
         }
     } else if (master && (name == "ID")) {
+        // If you are the leader and you are making the list of all the people in the group
         people.push(id)
         num_people += 1
     } else if (groupListSetup && (name == "ID_list")) {
+        // If you are recieving the list of people
         people.push(value)
+    } else if (getGroupDistance && (name == "distance")) {
+        // If you are getting the group's tolerance.
+        distance = value
+
     }
 })
 
 radio.onReceivedString(function (recievedString) {
     if (recievedString == "Done") {
+        // If you are done with the set up
+        groupListSetup = false
+        getGroupDistance = false
+        for (let i = 0; i < num_people; i++) {
+            prevLists.push([])
+            for (let j = 0; j < num_people; j++) {
+                prevLists[i].push(1)
+            }
+        }
         basic.showString("Group Found!", 75)
     }
 })
 
 basic.forever(function () {
     if (input.buttonIsPressed(Button.AB) && !joined) {
-        basic.showString("Looking for a group...", 75);
-        control.waitMicros(1000);
-        if (!joined) {
-            master = true
-            joined = true;
-            group_num = randint(0, 100000)
-            radio.sendValue("GroupNum", group_num)
-            radio.setGroup((group_num > 255) ? 255 : group_num);
-            control.waitMicros(1000)
-            for (let i = 0; i < num_people; i++) {
-                radio.sendValue("ID_list", people[i])
-                control.waitMicros(10)
-            }
-            radio.sendString("Done")
-            basic.showString("Group created.", 75)
-        }
+        setUp()
+    } else if (joined) {
+        tick()
     }
 })
