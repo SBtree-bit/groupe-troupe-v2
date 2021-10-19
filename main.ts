@@ -6,7 +6,8 @@ let master = false
 let getGroupDistance = false
 let distance = 0
 let currentList = [0]
-let prevLists = [[0]]
+let prevLists = [0]
+let out = ""
 let createGroupMessage = false
 let id = randint(0, 10000000000)
 let people = [id]
@@ -15,8 +16,26 @@ let looking = false
 radio.setGroup(0)
 radio.sendNumber(0);
 
+function beep()
+{
+    basic.showIcon(IconNames.Skull)
+    music.playTone(Note.C, 1)
+}
+
 function tick()
-{}
+{
+    let count = 0
+    for (let i = 0; i < prevLists.length; i++) {
+        count++
+        out.concat("1")
+    }
+    if (count < num_people) {
+        beep()
+    }
+    for (let i = 0; i < num_people; i++) {
+        if (i == people.indexOf(id)) {}
+    }
+}
 
 function makeGroup()
 {
@@ -76,6 +95,7 @@ radio.onReceivedValue(function (name: string, value: number) {
     } else if (groupListSetup && (name == "ID_list")) {
         // If you are recieving the list of people
         people.push(value)
+        num_people++
     } else if (getGroupDistance && (name == "distance")) {
         // If you are getting the group's tolerance.
         distance = value
@@ -90,11 +110,9 @@ radio.onReceivedString(function (recievedString) {
         // If you are done with the set up
         groupListSetup = false
         getGroupDistance = false
+        prevLists = []
         for (let i = 0; i < num_people; i++) {
-            prevLists.push([])
-            for (let j = 0; j < num_people; j++) {
-                prevLists[i].push(1)
-            }
+            prevLists.push(111)
         }
         basic.showString("Group Found!", 75)
     }
