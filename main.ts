@@ -5,8 +5,9 @@ let group_num = 0
 let master = false
 let getGroupDistance = false
 let distance = 0
+let getGroupLists = false
 let currentList = [0]
-let prevLists = [0]
+let prevLists = [["",0]]
 let out = ""
 let createGroupMessage = false
 let id = randint(0, 10000000000)
@@ -19,22 +20,28 @@ radio.sendNumber(0);
 function beep()
 {
     basic.showIcon(IconNames.Skull)
-    music.playTone(Note.C, 1)
+    music.playTone(Note.G, 1)
 }
 
 function tick()
 {
     let count = 0
     for (let i = 0; i < prevLists.length; i++) {
-        count++
-        out.concat("1")
+        let curr_list = prevLists[i]
+        let device_distance = curr_list[1]
+        if (device_distance < -128 + distance * 11) {
+            beep()
+        }
     }
     if (count < num_people) {
         beep()
     }
-    for (let i = 0; i < num_people; i++) {
-        if (i == people.indexOf(id)) {}
-    }
+    prevLists = []
+    getGroupLists = true
+    control.waitMicros((10 * people.indexOf(id)))
+    radio.sendValue("GroupLists", parseInt(out))
+    control.waitMicros((10 * (people.length - (people.indexOf(id) + 1))))
+    getGroupLists = false
 }
 
 function makeGroup()
@@ -102,6 +109,11 @@ radio.onReceivedValue(function (name: string, value: number) {
         basic.showNumber(distance)
         groupListSetup = true
         people = []
+    } else if (getGroupLists && (name == "GroupLists")) {
+        prevLists.push([])
+        let idx = prevLists.indexOf([])
+        prevLists[idx].push(value.toString())
+        prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
     }
 })
 
@@ -112,7 +124,12 @@ radio.onReceivedString(function (recievedString) {
         getGroupDistance = false
         prevLists = []
         for (let i = 0; i < num_people; i++) {
-            prevLists.push(111)
+            prevLists.push([])
+            prevLists[i].push("")
+            for (let j = 0; j < num_people; j++) {
+                prevLists[i][0] += "1"
+            }
+            prevLists[i].push(-42)
         }
         basic.showString("Group Found!", 75)
     }
