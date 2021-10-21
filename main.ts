@@ -9,6 +9,7 @@ let getGroupLists = false
 let currentList = [0]
 let prevLists = [["",0]]
 let out = ""
+let idx = 0
 let createGroupMessage = false
 let id = randint(0, 10000000000)
 let people = [id]
@@ -27,9 +28,10 @@ function tick()
 {
     let count = 0
     for (let i = 0; i < prevLists.length; i++) {
-        let curr_list = prevLists[i]
-        let device_distance = curr_list[1]
-        if (device_distance < -128 + distance * 11) {
+        count++
+        let device_distance = prevLists[i][1]
+        console.log(prevLists[i][1])
+        if (device_distance < (-42 + (distance * 11))) {
             beep()
         }
     }
@@ -38,9 +40,14 @@ function tick()
     }
     prevLists = []
     getGroupLists = true
-    control.waitMicros((10 * people.indexOf(id)))
-    radio.sendValue("GroupLists", parseInt(out))
-    control.waitMicros((10 * (people.length - (people.indexOf(id) + 1))))
+    console.log("About to Run")
+    for (let i = 0; i < num_people; i++) {
+        if (i == people.indexOf(id)) {
+            radio.sendValue("GroupLists", parseInt(out))
+        }
+        idx++
+        control.waitMicros(10)
+    }
     getGroupLists = false
 }
 
@@ -111,7 +118,6 @@ radio.onReceivedValue(function (name: string, value: number) {
         people = []
     } else if (getGroupLists && (name == "GroupLists")) {
         prevLists.push([])
-        let idx = prevLists.indexOf([])
         prevLists[idx].push(value.toString())
         prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
     }
