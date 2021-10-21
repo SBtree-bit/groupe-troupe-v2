@@ -41,13 +41,10 @@ function tick()
     prevLists = []
     getGroupLists = true
     console.log("About to Run")
-    for (let i = 0; i < num_people; i++) {
-        if (i == people.indexOf(id)) {
-            radio.sendValue("GroupLists", parseInt(out))
-        }
-        idx++
-        control.waitMicros(10)
-    }
+    idx = 0
+    control.waitMicros((10 * people.indexOf(id)))
+    radio.sendValue("GroupLists", parseInt(out))
+    control.waitMicros((10 * (people.length - people.indexOf(id))))
     getGroupLists = false
 }
 
@@ -120,6 +117,8 @@ radio.onReceivedValue(function (name: string, value: number) {
         prevLists.push([])
         prevLists[idx].push(value.toString())
         prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
+        console.log(prevLists[idx][1])
+        idx++
     }
 })
 
