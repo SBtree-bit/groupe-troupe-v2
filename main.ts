@@ -30,7 +30,7 @@ function tick()
     for (let i = 0; i < prevLists.length; i++) {
         count++
         let device_distance = prevLists[i][1]
-        console.log(prevLists[i][1])
+        console.log(device_distance)
         if (device_distance < (-42 + (distance * 11))) {
             beep()
         }
@@ -44,7 +44,7 @@ function tick()
     idx = 0
     control.waitMicros((10 * people.indexOf(id)))
     radio.sendValue("GroupLists", parseInt(out))
-    control.waitMicros((10 * (people.length - people.indexOf(id))))
+    control.waitMicros((10 * (people.length - (people.indexOf(id) - 1))))
     getGroupLists = false
 }
 
