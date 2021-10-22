@@ -7,8 +7,9 @@ let getGroupDistance = false
 let distance = 0
 let getGroupLists = false
 let currentList = [0]
-let prevLists = [["",0]]
+let prevLists = [["", 0]]
 let out = ""
+let isJoined = false
 let idx = 0
 let createGroupMessage = false
 let id = randint(0, 10000000000)
@@ -18,14 +19,12 @@ let looking = false
 radio.setGroup(0)
 radio.sendNumber(0);
 
-function beep()
-{
+function beep() {
     basic.showIcon(IconNames.Skull)
     music.playTone(Note.G, 1)
 }
 
-function tick()
-{
+function tick() {
     let count = 0
     for (let i = 0; i < prevLists.length; i++) {
         count++
@@ -48,12 +47,11 @@ function tick()
     getGroupLists = false
 }
 
-function makeGroup()
-{
+function makeGroup() {
     people = []
     looking = false
     master = true
-    joined = true
+    isJoined = true
     group_num = randint(0, 100000)
     radio.sendValue("GroupNum", group_num)
     radio.setGroup((group_num > 255) ? 255 : group_num);
@@ -79,14 +77,14 @@ function makeGroup()
     }
     radio.sendString("Done")
     basic.showString("Group created.", 75)
+    joined = true
 }
 
-function setUp()
-{
+function setUp() {
     looking = true
     basic.showString("Looking for a group...", 75);
     control.waitMicros(1000);
-    if (!joined) {
+    if (!isJoined) {
         makeGroup()
     }
 }
@@ -95,7 +93,7 @@ radio.onReceivedValue(function (name: string, value: number) {
     if (looking && (name == "GroupNum")) {
         // If you are looking for a group
         if (name == "GroupNum") {
-            joined = true
+            isJoined = true
             group_num = value
             radio.setGroup((group_num > 255) ? 255 : group_num)
             radio.sendValue("ID", id)
@@ -119,7 +117,7 @@ radio.onReceivedValue(function (name: string, value: number) {
         prevLists.push([])
         prevLists[idx].push(value.toString())
         prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
-        console.log(prevLists[idx][1])
+        console.log(prevLists[idx])
         idx++
     }
 })
@@ -129,6 +127,7 @@ radio.onReceivedString(function (recievedString) {
         // If you are done with the set up
         groupListSetup = false
         getGroupDistance = false
+        joined = true
         prevLists = []
         for (let i = 0; i < num_people; i++) {
             prevLists.push([])
