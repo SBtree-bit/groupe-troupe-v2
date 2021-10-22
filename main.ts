@@ -50,6 +50,7 @@ function tick()
 
 function makeGroup()
 {
+    people = []
     looking = false
     master = true
     joined = true
@@ -71,6 +72,7 @@ function makeGroup()
     }
     radio.sendValue("distance", distance)
     control.waitMicros(1000)
+    people.push(id)
     for (let i = 0; i < num_people; i++) {
         radio.sendValue("ID_list", people[i])
         control.waitMicros(10)
