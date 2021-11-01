@@ -6,7 +6,7 @@ let master = false
 let getGroupDistance = false
 let distance = 0
 let getGroupLists = false
-let prevLists = [["", 0]]
+//let prevLists = [["", 0]]
 let out = ""
 let isJoined = false
 let idx = 0
@@ -25,8 +25,7 @@ function beep() {
 
 function tick() {
     let count = 0
-    for (let i = 0; i < prevLists.length; i++) {
-    //for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 2; i++) {
         count++
         let device_distance = radio.receivedPacket(RadioPacketProperty.SignalStrength)
         console.log(device_distance)
@@ -38,7 +37,7 @@ function tick() {
         beep()
     }
     */
-    prevLists = []
+    //prevLists = []
     getGroupLists = true
     console.log("About to Run")
     idx = 0
@@ -120,12 +119,12 @@ radio.onReceivedValue(function (name: string, value: number) {
         groupListSetup = true
         people = []
     } else if (getGroupLists && (name == "GroupLists")) {
-        prevLists.push([0])
+        /*prevLists.push([0])
         prevLists[idx].push(value.toString())
         console.log(radio.receivedPacket(RadioPacketProperty.SignalStrength))
         prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
         console.log(prevLists[idx])
-        idx++
+        idx++*/
     }
 })
 
@@ -135,14 +134,14 @@ radio.onReceivedString(function (recievedString) {
         groupListSetup = false
         getGroupDistance = false
         joined = true
-        prevLists = []
+        //prevLists = []
         for (let i = 0; i < num_people; i++) {
-            prevLists.push([])
+            /*prevLists.push([])
             prevLists[i].push("")
             for (let j = 0; j < num_people; j++) {
                 prevLists[i][0] += "1"
             }
-            prevLists[i].push(-42)
+            prevLists[i].push(-42)*/
         }
         basic.showString("Group Found!", 75)
     }
