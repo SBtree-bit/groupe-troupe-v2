@@ -6,7 +6,6 @@ let master = false
 let getGroupDistance = false
 let distance = 0
 let getGroupLists = false
-let currentList = [0]
 let prevLists = [["", 0]]
 let out = ""
 let isJoined = false
@@ -27,16 +26,18 @@ function beep() {
 function tick() {
     let count = 0
     for (let i = 0; i < prevLists.length; i++) {
+    //for (let i = 0; i < 2; i++) {
         count++
-        let device_distance = prevLists[i][1]
+        let device_distance = radio.receivedPacket(RadioPacketProperty.SignalStrength)
         console.log(device_distance)
-        if (device_distance < (-42 + (distance * 11))) {
+        if (device_distance < (-128 + (distance * 11))) {
             beep()
         }
-    }
+    }/*
     if (count < num_people) {
         beep()
     }
+    */
     prevLists = []
     getGroupLists = true
     console.log("About to Run")
@@ -45,6 +46,7 @@ function tick() {
     radio.sendValue("GroupLists", parseInt(out))
     control.waitMicros((10 * (people.length - (people.indexOf(id) - 1))))
     getGroupLists = false
+    console.log("Finished Running")
 }
 
 function makeGroup() {
@@ -92,6 +94,7 @@ function setUp() {
 radio.onReceivedValue(function (name: string, value: number) {
     if (looking && (name == "GroupNum")) {
         // If you are looking for a group
+        console.log("Found a group")
         if (name == "GroupNum") {
             isJoined = true
             group_num = value
@@ -101,21 +104,25 @@ radio.onReceivedValue(function (name: string, value: number) {
         }
     } else if (master && (name == "ID")) {
         // If you are the leader and you are making the list of all the people in the group
-        people.push(id)
+        console.log("Adding people to group")
+        people.push(value)
         num_people += 1
     } else if (groupListSetup && (name == "ID_list")) {
         // If you are recieving the list of people
+        console.log("Getting people list")
         people.push(value)
         num_people++
     } else if (getGroupDistance && (name == "distance")) {
         // If you are getting the group's tolerance.
+        console.log("Getting distance")
         distance = value
         basic.showNumber(distance)
         groupListSetup = true
         people = []
     } else if (getGroupLists && (name == "GroupLists")) {
-        prevLists.push([])
+        prevLists.push([0])
         prevLists[idx].push(value.toString())
+        console.log(radio.receivedPacket(RadioPacketProperty.SignalStrength))
         prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
         console.log(prevLists[idx])
         idx++
@@ -140,7 +147,6 @@ radio.onReceivedString(function (recievedString) {
         basic.showString("Group Found!", 75)
     }
 })
-
 basic.forever(function () {
     if (input.buttonIsPressed(Button.AB) && !joined) {
         setUp()
