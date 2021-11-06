@@ -1,11 +1,10 @@
 let num_people = 0
+let state = ""
 let joined = false
-let groupListSetup = false
 let group_num = 0
 let master = false
-let getGroupDistance = false
 let distance = 0
-let getGroupLists = false
+let num_people_state = 0
 //let prevLists = [["", 0]]
 let out = ""
 let isJoined = false
@@ -13,7 +12,6 @@ let idx = 0
 let createGroupMessage = false
 let id = randint(0, 10000000000)
 let people = [id]
-let looking = false
 
 radio.setGroup(0)
 radio.sendNumber(0);
@@ -38,19 +36,23 @@ function tick() {
     }
     */
     //prevLists = []
-    getGroupLists = true
+    state = "getGroupLists"
+    num_people_state = 1
+    while (num_people_state != num_people) {
+        radio.sendValue("check", 4)
+        state = "groupCheck"
+    }
     console.log("About to Run")
     idx = 0
     control.waitMicros((10 * people.indexOf(id)))
     radio.sendValue("GroupLists", parseInt(out))
     control.waitMicros((10 * (people.length - (people.indexOf(id) - 1))))
-    getGroupLists = false
+    state = ""
     console.log("Finished Running")
 }
 
 function makeGroup() {
     people = []
-    looking = false
     master = true
     isJoined = true
     group_num = randint(0, 100000)
@@ -82,7 +84,7 @@ function makeGroup() {
 }
 
 function setUp() {
-    looking = true
+    state = "looking"
     basic.showString("Looking for a group...", 75);
     control.waitMicros(1000);
     if (!isJoined) {
@@ -91,7 +93,7 @@ function setUp() {
 }
 
 radio.onReceivedValue(function (name: string, value: number) {
-    if (looking && (name == "GroupNum")) {
+    if ((state == "looking") && (name == "GroupNum")) {
         // If you are looking for a group
         console.log("Found a group")
         if (name == "GroupNum") {
@@ -99,40 +101,60 @@ radio.onReceivedValue(function (name: string, value: number) {
             group_num = value
             radio.setGroup((group_num > 255) ? 255 : group_num)
             radio.sendValue("ID", id)
-            getGroupDistance = true
+            state = "getGroupDistance"
         }
     } else if (master && (name == "ID")) {
         // If you are the leader and you are making the list of all the people in the group
         console.log("Adding people to group")
         people.push(value)
         num_people += 1
-    } else if (groupListSetup && (name == "ID_list")) {
+    } else if ((state == "groupListSetup") && (name == "ID_list")) {
         // If you are recieving the list of people
         console.log("Getting people list")
         people.push(value)
         num_people++
-    } else if (getGroupDistance && (name == "distance")) {
+    } else if ((state == "getGroupDistance") && (name == "distance")) {
         // If you are getting the group's tolerance.
         console.log("Getting distance")
         distance = value
         basic.showNumber(distance)
-        groupListSetup = true
+        state = "groupListSetup"
         people = []
-    } else if (getGroupLists && (name == "GroupLists")) {
+    } else if ((state == "getGroupLists") && (name == "GroupLists")) {
         /*prevLists.push([0])
         prevLists[idx].push(value.toString())
         console.log(radio.receivedPacket(RadioPacketProperty.SignalStrength))
         prevLists[idx].push(radio.receivedPacket(RadioPacketProperty.SignalStrength))
         console.log(prevLists[idx])
         idx++*/
+    } else if (name == "check") {
+        let state_num = 0
+        if (state == "looking") {
+            state_num = 1
+        } else if (state == "groupListSetup") {
+            state_num = 2
+        } else if (state == "getGroupDistance") {
+            state_num = 3
+        } else if (state == "getGroupLists") {
+            state_num = 4
+        }
+        control.waitMicros(10 * people.indexOf(id))
+        if (value == state_num) {
+            radio.sendValue("response", 1)
+        } else {
+            radio.sendValue("response", 0)
+        }
+    } else if ((state == "groupCheck") && (name == "response")) {
+        if (value == 1) {
+            num_people_state++
+        }
     }
 })
 
 radio.onReceivedString(function (recievedString) {
     if (recievedString == "Done") {
         // If you are done with the set up
-        groupListSetup = false
-        getGroupDistance = false
+        state = ""
         joined = true
         //prevLists = []
         for (let i = 0; i < num_people; i++) {
