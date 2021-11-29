@@ -1,5 +1,5 @@
 let num_people = 0
-let state = "start"
+let state = ""
 let joined = false
 let group_num = 0
 let master = false
@@ -10,11 +10,10 @@ let out = ""
 let isJoined = false
 let idx = 0
 let createGroupMessage = false
-let id2 = control.deviceSerialNumber()
+let id2 = randint(0, 10000000000)
 let people = [id2]
 radio.setGroup(0)
 radio.sendNumber(0)
-
 function beep() {
     basic.showIcon(IconNames.Skull)
     music.playTone(Note.G, 1)
@@ -59,15 +58,12 @@ function tick() {
 
 function makeGroup() {
     
-    state = "makeGroup"
     people = []
     master = true
     isJoined = true
-    group_num = id2
-    let radio_group = randint(1, 255)
+    group_num = randint(0, 100000)
     radio.sendValue("GroupNum", group_num)
-    //radio.sendValue("RadioGroup", radio_group)
-    //radio.setGroup(radio_group)
+    radio.setGroup(group_num > 255 ? 255 : group_num)
     control.waitMicros(10)
     basic.showString("Input distance: ", 75)
     distance = 5
@@ -95,15 +91,14 @@ function makeGroup() {
 }
 
 function setUp() {
-
+    
     state = "looking"
     basic.showString("Looking for a group...", 75)
     control.waitMicros(1000)
     if (!isJoined) {
         makeGroup()
     }
-    state = "groupSetup"
-
+    
 }
 
 radio.onReceivedValue(function on_received_value(name: string, value: number) {
@@ -121,14 +116,15 @@ radio.onReceivedValue(function on_received_value(name: string, value: number) {
     if (state == "looking" && name == "GroupNum") {
         //  If you are looking for a group
         console.log("Found a group")
-        isJoined = true
-        group_num = value
-        radio.sendValue("ID", id2)
-        state = "getGroupDistance"
+        if (name == "GroupNum") {
+            isJoined = true
+            group_num = value
+            radio.setGroup(group_num > 255 ? 255 : group_num)
+            radio.sendValue("ID", id2)
+            state = "getGroupDistance"
+        }
         
-    } /*else if (name == "RadioGroup") {
-        radio.setGroup(value)
-    }*/ else if (master && name == "ID") {
+    } else if (master && name == "ID") {
         //  If you are the leader and you are making the list of all the people in the group
         console.log("Adding people to group")
         people.push(value)
@@ -197,8 +193,8 @@ radio.onReceivedString(function on_received_string(recievedString: string) {
     }
     
 })
-
 basic.forever(function on_forever() {
+    
     if (input.buttonIsPressed(Button.AB) && !joined) {
         setUp()
     } else if (joined) {
